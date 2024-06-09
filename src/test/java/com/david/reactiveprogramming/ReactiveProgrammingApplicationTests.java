@@ -8,6 +8,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 
 import java.time.Duration;
+import java.util.stream.Stream;
 
 @SpringBootTest
 class ReactiveProgrammingApplicationTests {
@@ -21,13 +22,17 @@ class ReactiveProgrammingApplicationTests {
 
 		Mono<String> error = Mono.error(new RuntimeException("Mono which produces error when subscribe to him"));
 
-		Mono<String> data = Mono
+		Mono<String> mono = Mono
 				.just("Mono is a publisher with 0 or 1 item")
 				.log()
 				.then(error);
 
 		//consume the mono by subscribing
-		data.subscribe(System.out::println);
+		mono.subscribe(
+				data -> System.out.println(data), //onNext
+				throwable -> System.out.println(throwable), //onError
+				() -> System.out.println("Completed") //onCompleted
+		);
 
 		//error.subscribe(System.out::println);
 	}
@@ -75,6 +80,47 @@ class ReactiveProgrammingApplicationTests {
 			System.out.println(x);
 		});
 
+	}
+
+	@Test
+	void testHandleErrors() throws InterruptedException {
+
+		Flux.just(1,2,3,4,5,6,7)
+				.concatWith(Flux.error(new RuntimeException()))
+				.onErrorReturn(-1)
+				.subscribe();
+
+		Flux.just(1,2,3,4,5)
+				.map(x -> {
+					if (x == 1) throw new RuntimeException();
+
+					return x;
+				})
+				.onErrorContinue((throwable, o) -> System.out.println("Excepcion: "+throwable+", provocada por: " + o))
+				.log()
+				.subscribe();
+
+	}
+
+	@Test
+	void testColdAndHotPublisher() throws InterruptedException {
+
+		Flux<String> stringFlux = Flux.fromStream(this::getVideos)
+				.delayElements(Duration.ofSeconds(1))
+				.share(); //From cold to hot publisher
+
+		stringFlux.subscribe(part -> System.out.println("Subscriber 1: " + part));
+
+		Thread.sleep(5000);
+
+		stringFlux.subscribe(part -> System.out.println("Subscriber 2: " + part));
+
+		Thread.sleep(10000);
+	}
+
+	public Stream<String> getVideos(){
+		System.out.println("Request for video");
+		return Stream.of("part 1","part 2","part 3","part 4","part 5");
 	}
 
 }
