@@ -111,11 +111,11 @@ class ReactiveProgrammingApplicationTests {
 
 		stringFlux.subscribe(part -> System.out.println("Subscriber 1: " + part));
 
-		Thread.sleep(5000);
+		//Thread.sleep(5000);
 
 		stringFlux.subscribe(part -> System.out.println("Subscriber 2: " + part));
 
-		Thread.sleep(10000);
+		//Thread.sleep(10000);
 	}
 
 	public Stream<String> getVideos(){
