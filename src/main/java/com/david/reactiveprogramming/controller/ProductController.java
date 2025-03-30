@@ -4,10 +4,13 @@ import com.david.reactiveprogramming.domain.Product;
 import com.david.reactiveprogramming.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.time.Duration;
 
 @RestController
 @RequiredArgsConstructor
@@ -38,10 +41,10 @@ public class ProductController {
         return new ResponseEntity<>(product,HttpStatus.OK);
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public ResponseEntity<Flux<Product>> findAll(){
 
-        Flux<Product> products = productService.findAll();
+        Flux<Product> products = productService.findAll().delayElements(Duration.ofMillis(500));
 
         return new ResponseEntity<>(products,HttpStatus.OK);
     }
